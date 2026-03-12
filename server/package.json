@@ -1,0 +1,26 @@
+{
+  "name": "resilient-workflow-server",
+  "version": "1.0.0",
+  "description": "Configurable resilient workflow decision engine (backend)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.2",
+    "joi": "^17.13.3",
+    "mongoose": "^8.3.2",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.1.0",
+    "supertest": "^6.3.4"
+  }
+}

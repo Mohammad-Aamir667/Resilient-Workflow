@@ -1,0 +1,112 @@
+{
+  "workflowType": "application-approval",
+  "version": 1,
+  "description": "Simple application approval workflow with rules, manual review, and external dependency.",
+  "schema": {
+    "requiredFields": ["applicantId", "amount", "income", "country"],
+    "numericFields": ["amount", "income"]
+  },
+  "rules": {
+    "mandatoryFields": {
+      "id": "mandatoryFields",
+      "description": "All mandatory fields must be present",
+      "type": "mandatory"
+    },
+    "amountThreshold": {
+      "id": "amountThreshold",
+      "description": "Reject applications above hard limit",
+      "type": "threshold",
+      "field": "amount",
+      "operator": "<=",
+      "value": 100000
+    },
+    "incomeToAmountRatio": {
+      "id": "incomeToAmountRatio",
+      "description": "Require income at least 3x amount",
+      "type": "expression",
+      "expression": "context.income >= 3 * context.amount"
+    }
+  },
+  "stages": {
+    "INTAKE": {
+      "type": "system",
+      "onEnter": ["mandatoryFields"],
+      "transitions": [
+        {
+          "condition": "rules.mandatoryFields === 'FAIL'",
+          "to": "REJECTED"
+        },
+        {
+          "condition": "true",
+          "to": "AUTO_RULES"
+        }
+      ]
+    },
+    "AUTO_RULES": {
+      "type": "system",
+      "onEnter": ["amountThreshold", "incomeToAmountRatio"],
+      "transitions": [
+        {
+          "condition": "rules.amountThreshold === 'FAIL'",
+          "to": "REJECTED"
+        },
+        {
+          "condition": "rules.incomeToAmountRatio === 'FAIL'",
+          "to": "MANUAL_REVIEW"
+        },
+        {
+          "condition": "true",
+          "to": "EXTERNAL_RISK_CHECK"
+        }
+      ]
+    },
+    "EXTERNAL_RISK_CHECK": {
+      "type": "system",
+      "externalDependency": "riskEngine",
+      "transitions": [
+        {
+          "condition": "dependencies.riskEngine === 'FAILED_TRANSIENT'",
+          "to": "RETRY_WAIT"
+        },
+        {
+          "condition": "dependencies.riskEngine === 'FAILED_FATAL'",
+          "to": "REJECTED"
+        },
+        {
+          "condition": "dependencies.riskEngine === 'APPROVED'",
+          "to": "APPROVED"
+        }
+      ]
+    },
+    "RETRY_WAIT": {
+      "type": "system",
+      "transitions": [
+        {
+          "condition": "true",
+          "to": "EXTERNAL_RISK_CHECK"
+        }
+      ]
+    },
+    "MANUAL_REVIEW": {
+      "type": "manual",
+      "transitions": [
+        {
+          "condition": "manualDecision === 'APPROVE'",
+          "to": "APPROVED"
+        },
+        {
+          "condition": "manualDecision === 'REJECT'",
+          "to": "REJECTED"
+        }
+      ]
+    },
+    "APPROVED": {
+      "type": "terminal"
+    },
+    "REJECTED": {
+      "type": "terminal"
+    }
+  },
+  "initialStage": "INTAKE"
+}
+

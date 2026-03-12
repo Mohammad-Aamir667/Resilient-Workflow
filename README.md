@@ -2,16 +2,14 @@
 
 This project is a **configurable workflow decision platform** that can execute real-world business workflows (application approval, claims processing, onboarding, etc.) using configuration-driven rules and stages.
 
-This repo currently contains a **Node.js/Express backend** (`server`) that implements:
+The repo is split into:
 
-- **Input intake** with schema validation (`Joi`)
-- **Config-driven rules engine** and workflow stages
-- **External dependency simulation** (risk engine) with transient and fatal failures
-- **Idempotent request handling**
-- **Audit trail and history** for each workflow instance
-- **Retry and manual-review flows**
+- `server`: Node.js/Express + MongoDB **backend** with configurable workflow/rule engine.
+- `client`: Vite + React **frontend** that drives the `application-approval` workflow and visualizes decisions and audit trails.
 
-### Running the server
+---
+
+### Running the backend (`server`)
 
 - **Install dependencies:**
 
@@ -32,7 +30,7 @@ Health check:
 
 - `GET /health` → `{ "status": "ok" }`
 
-### Workflow APIs (application-approval)
+#### Workflow APIs (application-approval)
 
 Base path:
 
@@ -78,16 +76,42 @@ Endpoints:
   - **GET** `/config`
   - Returns the JSON configuration used to drive this workflow (rules, stages, transitions).
 
-### Tests
+---
+
+### Running the frontend (`client`)
+
+The React frontend provides a minimal UI to:
+
+- Submit application-approval requests (including optional idempotency key).
+- Trigger retries and manual decisions.
+- Inspect the current workflow instance (status, stage, context).
+- View an **audit trail** of rule evaluations, external calls, transitions, and manual decisions.
+- Preview the active workflow configuration JSON.
+
+Steps:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+By default Vite serves the client on `http://localhost:5173` and proxies `/api` calls to `http://localhost:4000` (configured in `client/vite.config.js`).
+
+Make sure the backend is running before using the UI.
+
+---
+
+### Tests (backend)
 
 The backend includes Jest tests for:
 
-- Happy-path approval
-- Invalid input
-- Idempotent duplicate requests
-- External dependency failure
-- Retry flow driven by configuration
-- Rule-change scenario driven purely by config
+- Happy-path approval.
+- Invalid input.
+- Idempotent duplicate requests.
+- External dependency failure.
+- Retry flow driven by configuration.
+- Rule-change scenario driven purely by config.
 
 Run tests:
 
@@ -96,8 +120,10 @@ cd server
 npm test
 ```
 
-### Next steps and extensions
+---
+
+### Extending the system
 
 - Add additional workflow configurations (e.g. claims, onboarding) by creating new JSON files under `server/src/config/workflows`.
-- Extend the minimal REST API or build a front-end/CLI to visualize workflow instances and audit history.
+- Extend the REST API or frontend to visualize multiple workflows, filter by status, or show more advanced analytics.
 

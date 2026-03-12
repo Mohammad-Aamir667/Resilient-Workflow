@@ -1,6 +1,6 @@
 ## Architecture Overview
 
-This document describes the architecture of the **Resilient Workflow Decision System** implemented in this repository.
+This document describes the architecture of the **Resilient Workflow Decision System** implemented in this repository, covering both backend (`server`) and frontend (`client`).
 
 ### High-level goals
 
@@ -8,10 +8,11 @@ This document describes the architecture of the **Resilient Workflow Decision Sy
 - **Resilient decisioning**: Handle transient and fatal failures from dependencies, retries, and manual review.
 - **Explainable decisions**: Maintain full audit trail with rule evaluations, transitions, and dependency calls.
 - **Idempotent intake**: Safe handling of duplicate submissions.
+- **Simple demo UI**: Provide a minimal but clear interface to exercise and visualize the system.
 
 ---
 
-## Components
+## Backend components (`server`)
 
 - **API layer (`src/index.js`, `src/routes/workflows.js`)**
   - Express app exposing REST endpoints under `/api/workflows/:workflowType`.
@@ -84,6 +85,41 @@ This document describes the architecture of the **Resilient Workflow Decision Sy
       - `RETRY_WAIT` → loops back to `EXTERNAL_RISK_CHECK` (demonstrates retry flow).
       - `MANUAL_REVIEW` → waits for `manualDecision`.
       - `APPROVED`/`REJECTED` → terminal outcomes.
+
+---
+
+## Frontend components (`client`)
+
+- **SPA shell (`src/main.jsx`, `src/App.jsx`)**
+  - React app that talks to the backend via REST:
+    - `POST /api/workflows/application-approval/requests`
+    - `GET /instances/:id`
+    - `POST /instances/:id/retry`
+    - `POST /instances/:id/manual-decision`
+    - `GET /config`
+  - Responsibilities:
+    - Capture user input for application-approval requests (including optional idempotency key).
+    - Display current workflow instance status, stage, and context.
+    - Surface retry and manual decision actions.
+    - Render the audit trail for explainability.
+    - Show a snapshot of the active workflow configuration JSON.
+
+- **Vite configuration (`vite.config.js`)**
+  - Uses `@vitejs/plugin-react`.
+  - Proxies `/api` to `http://localhost:4000` so the frontend can call the backend without CORS issues.
+
+- **UI/UX layer (`src/App.css`, `src/index.css`)**
+  - Layout:
+    - Header with global status pill.
+    - Grid layout with:
+      - Application submission form.
+      - Current instance panel.
+      - Audit trail list.
+      - Workflow configuration preview.
+  - Provides a modern, responsive style oriented around:
+    - Clear status indicators.
+    - Readable JSON previews.
+    - Compact but legible audit entries with expandable details.
 
 ---
 
